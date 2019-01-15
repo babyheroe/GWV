@@ -12,6 +12,8 @@ GWV Tutorial
 
 #Aufgabe 1
 
+import random
+
 def get_dictionary():
     data = open("Johannsen_Gollek_Kock_Fuchs_GWV_Tutorial_11_sitzordnung.txt", "r")
 
@@ -48,4 +50,28 @@ def get_dict_value(Person1, Person2):
     return 0
 
 print dictionary
-print get_dict_value('Peter', 'Juergen')
+print get_dict_value('Dieter', 'Renate')
+
+
+# Generates new random seating order and calculates current relationship value
+def getInitialSeatingOrder(dict):
+    seatingOrder = []
+    optimizedSeatingOrder = []
+    ratingValue = 0
+
+    # randomizes seatingOrder as list
+    for key in dict:
+        seatingOrder.append(key)
+    random.shuffle(seatingOrder)
+    print seatingOrder
+
+    # current relationship value for whole table
+    for j in range(0, len(seatingOrder) - 1):
+        ratingValue += int(get_dict_value(seatingOrder[j], seatingOrder[j + 1]))
+
+    # relation of last person with first person
+    ratingValue += int(get_dict_value(seatingOrder[-1], seatingOrder[0]))
+    print "Current relationship value: ", ratingValue
+
+
+getInitialSeatingOrder(dictionary)
