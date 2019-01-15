@@ -45,8 +45,7 @@ def get_dict_value(Person1, Person2):
     elif Person2 in dictionary:
         if Person1 in dictionary[Person2]:
             return dictionary[Person2][Person1]
-    else:
-        return 0
+    return 0
 
 print dictionary
 print get_dict_value('Peter', 'Juergen')
