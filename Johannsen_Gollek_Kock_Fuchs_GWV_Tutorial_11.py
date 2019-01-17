@@ -13,33 +13,86 @@ GWV Tutorial
 #Aufgabe 1
 
 import random
+import sys
 
+list_of_5_names = ['Andreas', 'Berta', 'Charlie', 'Dorothea', 'Eberhart']
+list_of_8_names = ['Andreas', 'Berta', 'Charlie', 'Dorothea', 'Eberhart',
+                   'Ferdinand', 'Gertrud', 'Hans']
+list_of_10_names = ['Andreas', 'Berta', 'Charlie', 'Dorothea', 'Eberhart',
+                   'Ferdinand', 'Gertrud', 'Hans', 'Isabella', 'Juergen']
+list_of_20_names = ['Andreas', 'Berta', 'Charlie', 'Dorothea', 'Eberhart',
+                   'Ferdinand', 'Gertrud', 'Hans', 'Isabella', 'Juergen',
+                   'Karo', 'Lennard', 'Markus', 'Nina', 'Olga',
+                   'Peter', 'Quetzal', 'ROOOOBERT', 'Sven', 'Theodor']
+list_of_50_names = ['Eleonore', 'Lynn', 'Nikia', 'Amos', 'Cyril',
+                    'Margeret', 'Chanelle', 'Kerri', 'Shira', 'Margery',
+                    'Meagan', 'Lucile', 'Tonette', 'Rashida', 'Emelda',
+                    'Nadene', 'Pilar', 'Ettie', 'Cammie', 'Sandee',
+                    'Xochitl', 'Macy', 'Graig', 'Wen', 'Toni',
+                    'Leesa', 'Yadira', 'Mellisa', 'Maurita', 'Chara',
+                    'Dorsey', 'Gail', 'Sergio', 'Davis', 'Shannan',
+                    'Birdie', 'Estelle', 'Merissa', 'Fred', 'Mariam',
+                    'Wilber', 'Neil', 'Reuben', 'Selina', 'Lizabeth',
+                    'Sylvie', 'Elinore', 'Sunday', 'Bessie', 'Liberty']
+
+
+
+# Reads the dictionary from the .txt file
 def get_dictionary():
+    # Reading .txt into text
     data = open("Johannsen_Gollek_Kock_Fuchs_GWV_Tutorial_11_sitzordnung.txt", "r")
-
     text =  data.readlines()
-
     data.close()
     
+    # Writing content of text into dictionary
     dictionary = {}
-    
     for i in range(0, len(text)):
         text[i] = str(text[i].strip('\n'))
         if text[i] != '':
             person1 = text[i].split(";")[0]
             person2 = text[i].split(";")[1]
-            relation = text[i].split(";")[2]
+            relation = int(text[i].split(";")[2])
             
             if person1 in dictionary and person2 not in dictionary[person1]:
                 dictionary[person1][person2] = relation
             else: 
                 dictionary[person1] = {person2 : relation}
-            
+    
+    print "Current dictionary:"
+    print dictionary
+    print ""
     return dictionary
 
-dictionary = get_dictionary()
+# Randomizes the relationships in the .txt file
+def get_randomize_relationships(names):
+    newDictionary = {}
+        
+    # Writing randomized relationships for every possible relation in newDictionary
+    for i in range(0, len(names)):
+        for j in range(i+1, len(names)):
+            person1 = names[i]
+            person2 = names[j]
+            relation = random.randint(-5, 5)
+            if person1 in newDictionary:
+                newDictionary[person1][person2] = relation
+            else: 
+                newDictionary[person1] = {person2 : relation}
+    
+    # Writing randomized dictionary into .txt
+    data = open("Johannsen_Gollek_Kock_Fuchs_GWV_Tutorial_11_sitzordnung.txt", "w")
+    for person1 in newDictionary:
+        for person2 in newDictionary[person1]:
+            relation = newDictionary[person1][person2]
+            data.write(person1 + ";" + person2 + ";" + str(relation) + "\n")
+    data.close()
+    
+    print "Randomized relationships:"
+    print newDictionary
+    print ""
+    return newDictionary
 
-def get_dict_value(Person1, Person2):
+# Gives the relationship value for 2 persons 
+def get_dict_value(Person1, Person2, dictionary):
     if Person1 in dictionary:
         if Person2 in dictionary[Person1]:
             return dictionary[Person1][Person2]
@@ -49,29 +102,69 @@ def get_dict_value(Person1, Person2):
             return dictionary[Person2][Person1]
     return 0
 
-print dictionary
-print get_dict_value('Dieter', 'Renate')
-
-
-# Generates new random seating order and calculates current relationship value
-def getInitialSeatingOrder(dict):
-    seatingOrder = []
-    optimizedSeatingOrder = []
+# Gives rating of an seating order
+def get_rating(seatingOrder, dictionary):
     ratingValue = 0
-
-    # randomizes seatingOrder as list
-    for key in dict:
-        seatingOrder.append(key)
-    random.shuffle(seatingOrder)
-    print seatingOrder
-
     # current relationship value for whole table
     for j in range(0, len(seatingOrder) - 1):
-        ratingValue += int(get_dict_value(seatingOrder[j], seatingOrder[j + 1]))
+        ratingValue += get_dict_value(seatingOrder[j], seatingOrder[j + 1], dictionary)
 
     # relation of last person with first person
-    ratingValue += int(get_dict_value(seatingOrder[-1], seatingOrder[0]))
-    print "Current relationship value: ", ratingValue
+    ratingValue += get_dict_value(seatingOrder[-1], seatingOrder[0], dictionary)
+    
+    return ratingValue
+    
+# Generates new random seating order as a name list
+def get_random_seating_order(dictionary):
+    seatingOrder = []
 
+    # randomizes seatingOrder as list
+    for name1 in dictionary:
+        for name2 in dictionary[name1]:
+            if name1 not in seatingOrder:
+                seatingOrder.append(name1)
+            elif name2 not in seatingOrder:
+                seatingOrder.append(name2)
+    random.shuffle(seatingOrder)
+    
+    return seatingOrder
 
-getInitialSeatingOrder(dictionary)
+"""
+Tests:
+dict1 = get_dictionary()
+listOfNames = get_random_seating_order(dict1)
+dict2 = get_randomize_relationships(listOfNames)
+seatingOrder = get_random_seating_order(dict2)
+get_rating(seatingOrder, dict2)
+dict3 = get_randomize_relationships(list_of_10_names)
+brute_force(dict3, 100)
+"""
+
+# Gives 
+def brute_force(dictionary, allowedFailures):
+    bestSeatingOrder = []
+    bestRating = -sys.maxint -1
+    failures = 0
+    while failures <= allowedFailures:
+        seatingOrder = get_random_seating_order(dictionary)
+        rating = get_rating(seatingOrder, dictionary)
+        if rating > bestRating:
+            bestRating =  rating
+            bestSeatingOrder = seatingOrder
+            failures = 0
+        else:
+            failures += 1
+    print "brute force:"
+    print "seating order: ", bestSeatingOrder
+    print "rating: ", bestRating
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
