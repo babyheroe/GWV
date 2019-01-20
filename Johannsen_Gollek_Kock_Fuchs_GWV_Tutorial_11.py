@@ -159,7 +159,13 @@ def brute_force(dictionary, allowedFailures):
     print "rating: ", bestRating
 
     
-    
+dict1 = get_dictionary()
+listOfNames = get_random_seating_order(dict1)
+dict2 = get_randomize_relationships(listOfNames)
+
+def greedy_accent(dictionary):
+    currentSeatingOrder = []
+    bestRating = -sys.maxint -1
     
     
     
