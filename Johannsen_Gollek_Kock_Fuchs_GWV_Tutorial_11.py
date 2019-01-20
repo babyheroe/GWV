@@ -228,8 +228,74 @@ def greedy_ascent_Restart(maxRestarts, randomSeatingOrder, dicti):
                 i += 1
         return "No randomRestart helped. InitialOrder: ", initialOrder, initialRating
 
+def greedy_ascent(tries, seatingOrder, dicti):
+    rating = get_rating(seatingOrder, dicti)
+    print seatingOrder, rating
+    
+    worstPerson = None
+    worstTrioRating = sys.maxint
+    
+    #for-loop für anzahl der Schritte
+    for i in range(0, tries):
+        #foor-loop um die Person mit der schlechtesten Platzierung zu finden
+        for seat in range(0, len(seatingOrder)):
+            #sonderfall für letzte Person
+            if (seat == len(seatingOrder) - 1):
+                trio = [seatingOrder[seat - 1], seatingOrder[seat], seatingOrder[0]]  
+            else:
+                trio = [seatingOrder[seat - 1], seatingOrder[seat], seatingOrder[seat + 1]]
+            
+            #rating für die Person und die Nachbarn
+            trioRating = get_rating(trio, dicti)
+            
+            #schlechteres Trio gefunden
+            if trioRating < worstTrioRating:
+                worstTrioRating = trioRating
+                worstPerson = seat
+        
+        #funktion zum sitzplatztauschen.
+        newSeatingOrder, newRating = ascent(worstPerson, seatingOrder, dicti, rating)
+        
+        #update rating
+        if newRating > rating:
+            rating = newRating
+            seatingOrder = newSeatingOrder
+        
+        i += 1
+        
+    return seatingOrder, rating
+            
+def ascent(worstPerson, seatingOrder, dicti, rating):
+    #liste zum speichern der möglichen restpartner, ohne worstPerson
+    swapPartner = list(seatingOrder)
+    swapPartner.pop(worstPerson)
+    newRating = -sys.maxint -1
+    
+    #läuft solange es tauschpartner gibt und kein besseres rating erreich wurde
+    while newRating < rating and len(swapPartner) != 0:
+        newSeatingOrder = list(seatingOrder)
+        #wählt zufällige person aus
+        swapIndex = seatingOrder.index(random.choice(swapPartner))
+        #probetausch von personen
+        newSeatingOrder[worstPerson], newSeatingOrder[swapIndex] = newSeatingOrder[swapIndex], newSeatingOrder[worstPerson]
+        
+        #proberating erstellen
+        newRating = get_rating(newSeatingOrder, dicti)
+        #keine verbesserung tauschpartner entfernen
+        if newRating < rating:
+            swapPartner.pop(swapPartner.index(random.choice(swapPartner)))
+    
+    #entweder bei keiner verbesserung bestehendes zurückgeben oder verbessertes
+    if len(swapPartner) != 0:
+        return newSeatingOrder, newRating
+    else:
+        return seatingOrder, rating
 
 dict1 = get_dictionary()
 seats = get_random_seating_order(dict1)
 # print greedy_ascent_costly(5, seats, dict1)
-print greedy_ascent_Restart(4, seats, dict1)
+#print greedy_ascent_Restart(4, seats, dict1)
+print greedy_ascent(20000, seats, dict1)
+
+
+
