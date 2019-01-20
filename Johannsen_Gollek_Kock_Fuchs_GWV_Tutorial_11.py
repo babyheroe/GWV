@@ -163,22 +163,6 @@ def brute_force(dictionary, allowedFailures):
     print "seating order: ", bestSeatingOrder
     print "rating: ", bestRating
 
-
-# Picks a fix number of randomly persons and checks all of their neighbours for best swapping
-# Count: All actual swaps, defined by tries
-def greedy_ascent_costly(tries, randomSeatingOrder, dicti):
-    rating = get_rating(randomSeatingOrder, dicti)
-
-    for i in range(0, tries):
-        pickedPerson = random.choice(randomSeatingOrder)
-
-        print "Initial seating order: ", randomSeatingOrder, rating
-        seatingOrder, rating = get_best_swap(randomSeatingOrder, pickedPerson, dicti, rating)
-        i += 1
-
-    return seatingOrder, rating
-
-
 # Checks all swap possibilities for person by swapping with left neigbours
 # returns the new best seatingOrder and belonging ratingValue
 def get_best_swap(seatingOrder, pickedPerson, dicti, rating):
@@ -196,39 +180,59 @@ def get_best_swap(seatingOrder, pickedPerson, dicti, rating):
             bestRating = newRating
         swapIndex -= 1
 
-    print pickedPerson, "has swapped with ", seatingOrder[bestSwapIndex]
+    #print pickedPerson, "has swapped with ", seatingOrder[bestSwapIndex]
     seatingOrder[index], seatingOrder[bestSwapIndex] = seatingOrder[bestSwapIndex], seatingOrder[index]
 
-    print "New seating order: ", seatingOrder, bestRating, "\r\n"
+    #print "New seating order: ", seatingOrder, bestRating, "\r\n"
     return seatingOrder, bestRating
 
+# Picks a fix number of randomly persons and checks all of their neighbours for best swapping
+# Count: All actual swaps, defined by tries
+def greedy_ascent(randomSeatingOrder, dictionary):
+    rating = get_rating(randomSeatingOrder, dictionary)
+    oldRating = rating
+    run = True
+    seatingOrder = randomSeatingOrder
+
+    while(run):
+        for i in range(0, len(seatingOrder)):
+            newSeatingOrder, newRating = get_best_swap(seatingOrder, seatingOrder[i], dictionary, rating)
+            if newRating > rating:
+                seatingOrder = newSeatingOrder
+                rating = newRating
+                i = len(seatingOrder) + 1
+        if rating > oldRating:
+            oldRating = rating
+        else:
+            run = False
+
+    return seatingOrder, rating
 
 # Checks for len(seatingOrder)/2 persons for a better rating.
 # If not found, seatingOrder will be randomly assigned new and then compared with the old seatingOrder
 # maxRestarts: How many times the algorithm may restart randomly in max
 # The error count for a restart is defined when calling greedy
-def greedy_ascent_Restart(maxRestarts, randomSeatingOrder, dicti):
-    initialRating = get_rating(randomSeatingOrder, dicti)
-    initialOrder = list(randomSeatingOrder)
+def greedy_ascent_restart(seatingOrder, dictionary, tries):
+    print "greedy_ascent_restart"
+    bestRating = get_rating(seatingOrder, dictionary)
+    bestSeatingOrder = seatingOrder
+    i = 0
+    while i < tries:
+        randomSeatingOrder = get_random_seating_order(dictionary)
+        newSeatingOrder, newRating =  greedy_ascent(randomSeatingOrder, dictionary)
+        print "new Rating: " + str(newRating)
+        print "best Rating: " + str(bestRating)
+        i += 1
+        if newRating > bestRating:
+            bestSeatingOrder = newSeatingOrder
+            bestRating = newRating
+            i = 0
+    return bestSeatingOrder, bestRating
 
-    seatingOrder, rating = greedy_ascent_costly(len(randomSeatingOrder) / 2, randomSeatingOrder, dicti)
-    if rating <= initialRating:
-        rating = initialRating
+dict3 = get_randomize_relationships(list_of_10_names)
+print greedy_ascent_restart(list_of_10_names, dict3, 3)
 
-        for i in range(0, maxRestarts - 1):
-            randomRestartOrder = get_random_seating_order(dicti)
-
-            # randomRestartRating = get_rating(randomRestartOrder, dicti)
-            # oder einfach randomRestartRating vergleichen und nicht nochmal verbessern?
-
-            newSeatingOrder, newRating = greedy_ascent_costly(len(randomRestartOrder) / 2, randomRestartOrder, dicti)
-            if newRating > rating:
-                return "With i+1 randomRestarts: ", newSeatingOrder, newRating
-            else:
-                i += 1
-        return "No randomRestart helped. InitialOrder: ", initialOrder, initialRating
-
-def greedy_ascent(tries, seatingOrder, dicti):
+def greedy_ascent_trio(tries, seatingOrder, dicti):
     rating = get_rating(seatingOrder, dicti)
     print seatingOrder, rating
     
@@ -254,7 +258,7 @@ def greedy_ascent(tries, seatingOrder, dicti):
                 worstPerson = seat
         
         #funktion zum sitzplatztauschen.
-        newSeatingOrder, newRating = ascent(worstPerson, seatingOrder, dicti, rating)
+        newSeatingOrder, newRating = ascent_trio(worstPerson, seatingOrder, dicti, rating)
         
         #update rating
         if newRating > rating:
@@ -265,7 +269,7 @@ def greedy_ascent(tries, seatingOrder, dicti):
         
     return seatingOrder, rating
             
-def ascent(worstPerson, seatingOrder, dicti, rating):
+def ascent_trio(worstPerson, seatingOrder, dicti, rating):
     #liste zum speichern der möglichen restpartner, ohne worstPerson
     swapPartner = list(seatingOrder)
     swapPartner.pop(worstPerson)
@@ -291,11 +295,11 @@ def ascent(worstPerson, seatingOrder, dicti, rating):
     else:
         return seatingOrder, rating
 
-dict1 = get_dictionary()
-seats = get_random_seating_order(dict1)
-# print greedy_ascent_costly(5, seats, dict1)
+#dict1 = get_dictionary()
+#seats = get_random_seating_order(dict1)
+#print greedy_ascent_costly(5, seats, dict1)
 #print greedy_ascent_Restart(4, seats, dict1)
-print greedy_ascent(20000, seats, dict1)
+#print greedy_ascent(20000, seats, dict1)
 
 
 
