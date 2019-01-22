@@ -14,6 +14,7 @@ GWV Tutorial
 
 import random
 import sys
+import profile
 
 list_of_5_names = ['Andreas', 'Berta', 'Charlie', 'Dorothea', 'Eberhart']
 list_of_8_names = ['Andreas', 'Berta', 'Charlie', 'Dorothea', 'Eberhart',
@@ -86,9 +87,6 @@ def get_randomize_relationships(names):
             data.write(person1 + ";" + person2 + ";" + str(relation) + "\n")
     data.close()
 
-    print "Randomized relationships:"
-    print newDictionary
-    print ""
     return newDictionary
 
 
@@ -159,9 +157,8 @@ def brute_force(dictionary, allowedFailures):
             failures = 0
         else:
             failures += 1
-    print "brute force:"
-    print "seating order: ", bestSeatingOrder
-    print "rating: ", bestRating
+    
+    return bestSeatingOrder, bestRating
 
 # Checks all swap possibilities for person by swapping with left neigbours
 # returns the new best seatingOrder and belonging ratingValue
@@ -213,15 +210,12 @@ def greedy_ascent(randomSeatingOrder, dictionary):
 # maxRestarts: How many times the algorithm may restart randomly in max
 # The error count for a restart is defined when calling greedy
 def greedy_ascent_restart(seatingOrder, dictionary, tries):
-    print "greedy_ascent_restart"
     bestRating = get_rating(seatingOrder, dictionary)
     bestSeatingOrder = seatingOrder
     i = 0
     while i < tries:
         randomSeatingOrder = get_random_seating_order(dictionary)
         newSeatingOrder, newRating =  greedy_ascent(randomSeatingOrder, dictionary)
-        print "new Rating: " + str(newRating)
-        print "best Rating: " + str(bestRating)
         i += 1
         if newRating > bestRating:
             bestSeatingOrder = newSeatingOrder
@@ -229,13 +223,8 @@ def greedy_ascent_restart(seatingOrder, dictionary, tries):
             i = 0
     return bestSeatingOrder, bestRating
 
-dict3 = get_randomize_relationships(list_of_10_names)
-print greedy_ascent_restart(list_of_10_names, dict3, 3)
-
 def greedy_ascent_trio(tries, seatingOrder, dicti):
-    rating = get_rating(seatingOrder, dicti)
-    print seatingOrder, rating
-    
+    rating = get_rating(seatingOrder, dicti)    
     worstPerson = None
     worstTrioRating = sys.maxint
     
@@ -301,5 +290,80 @@ def ascent_trio(worstPerson, seatingOrder, dicti, rating):
 #print greedy_ascent_Restart(4, seats, dict1)
 #print greedy_ascent(20000, seats, dict1)
 
+def greedy_best_first(dictionary, seatingOrder):
+    randomSeatingOrder = list(seatingOrder)
+    person1 = randomSeatingOrder[0]
+    result = [person1]
+    randomSeatingOrder.remove(person1)
+    while randomSeatingOrder != []:
+        bestRelation = -5
+        bestPerson = person1
+        for person2 in randomSeatingOrder:
+            relation = get_dict_value(person1, person2, dictionary)
+            if bestRelation <= relation:
+                bestRelation = relation
+                bestPerson = person2
+        result.append(bestPerson)
+        randomSeatingOrder.remove(bestPerson)
+        person1 = bestPerson
+    rating = get_rating(result, dictionary)
+    return result, rating
 
+def greedy_best_first_optimized(dictionary, persons):
+    list_of_persons = list(persons)
+    bestResult = []
+    bestRating = -sys.maxint - 1
+    for person in persons:
+        list_of_persons.remove(person)
+        new_list_of_persons = [person] + list_of_persons
+        result, rating = greedy_best_first(dictionary, new_list_of_persons)
+        list_of_persons = list(new_list_of_persons)
+        if rating > bestRating:
+            bestRating = rating
+            bestResult = result
+    return bestResult, bestRating
 
+# Evaluiert die Algorythmen
+def evaluate_all(persons):
+    averageBestFirst = 0
+    averageAscentRestart = 0
+    averageAscent = 0
+    averageBruteForce = 0
+    averageAscentTrio = 0
+    for i in (range(1, 1000)):
+        dictionary = get_randomize_relationships(persons)
+        _, tempBestFirst = greedy_best_first_optimized(dictionary, persons)
+        _, tempAscentRestart = greedy_ascent_restart(persons, dictionary, 5)
+        _, tempAscent = greedy_ascent(persons, dictionary)
+        _, tempBruteForce = brute_force(dictionary, 5)
+        _, tempAscentTrio = greedy_ascent_trio(5, persons, dictionary)
+        
+        averageBestFirst += tempBestFirst
+        averageAscentRestart += tempAscentRestart
+        averageAscent += tempAscent
+        averageBruteForce += tempBruteForce
+        averageAscentTrio += tempAscentTrio
+        print (i)
+    averageBestFirst /= 1000
+    averageAscentRestart /= 1000
+    averageAscent /= 1000
+    averageBruteForce /= 1000
+    averageAscentTrio /= 1000
+    print ("Best First: " + str(averageBestFirst))
+    print ("Ascent Restart: " + str(averageAscentRestart))
+    print ("Ascent: " + str(averageAscent))
+    print ("Brute Force: " + str(averageBruteForce))
+    print ("Ascent Trio: " + str(averageAscentTrio))
+        
+    
+
+list_of_names = list_of_50_names
+evaluate_all(list_of_names)
+"""
+dict3 = get_randomize_relationships(list_of_names)
+profile.run('print(greedy_best_first_optimized(dict3, list_of_names)); print()')
+profile.run('print(greedy_ascent_restart(list_of_names, dict3, 5)); print()')
+profile.run('print(greedy_ascent(list_of_names, dict3)); print()')
+profile.run('print(brute_force(dict3, 5)); print()')
+profile.run('print(greedy_ascent_trio(5, list_of_names, dict3)); print()')
+"""
